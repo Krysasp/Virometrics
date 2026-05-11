@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Management - Virometrics</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        .upload-zone {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: #109b81;
+            background: rgba(16, 155, 129, 0.05);
+        }
+        .file-type-chart {
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-virus"></i> <strong>Virometrics</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="comparison.html">Comparison</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="browse.html">Browse Tools</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="execute.html">Execute</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="dependencies.html">Dependencies</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="data.html">Data</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="workflow_builder.html">Workflow Builder</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="register-tool.html">Register Tool</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="execute-workflow.html">Execute Workflow</a>
+                    </li>
+                </ul>
+                <button class="btn btn-outline-light btn-sm" id="themeToggle">
+                    <i class="bi bi-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid dashboard-container">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="section-title">Data Management</h1>
+                <p class="lead">Manage data files, monitor storage, and validate outputs</p>
+            </div>
+        </div>
+
+        <!-- Storage Stats -->
+        <div class="row g-3 mb-4" id="storage-stats">
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <h6 class="text-muted">Total Space</h6>
+                        <h3 id="stat-total">-</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <h6 class="text-muted">Used Space</h6>
+                        <h3 id="stat-used">-</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <h6 class="text-muted">Free Space</h6>
+                        <h3 id="stat-free">-</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <h6 class="text-muted">File Count</h6>
+                        <h3 id="stat-files">-</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <!-- File Upload -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-cloud-upload"></i> Upload Files</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="upload-zone" id="upload-zone">
+                            <i class="bi bi-file-earmark-arrow-up" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <p class="mt-2">Drag & drop files here, or click to browse</p>
+                            <p class="text-muted small">Supports: FASTQ, BAM, VCF, CSV, FASTA, etc.</p>
+                            <input type="file" id="file-input" multiple style="display: none;">
+                        </div>
+                        <div id="upload-progress" class="mt-3" style="display: none;">
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 0%;"></div>
+                            </div>
+                            <small id="upload-status" class="text-muted"></small>
+                        </div>
+                        <div id="upload-results" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Type Stats -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-pie-chart"></i> File Type Distribution</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="filetype-chart" class="file-type-chart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Directory Sizes -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-folder2"></i> Directory Sizes</h5>
+                        <button class="btn btn-sm btn-outline-light" id="btn-refresh-dirs">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="dir-sizes">
+                            <p class="text-muted text-center py-3">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Browser -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-files"></i> File Browser</h5>
+                        <select class="form-select form-select-sm w-auto" id="filter-type">
+                            <option value="">All Types</option>
+                            <option value="fastq">FASTQ</option>
+                            <option value="bam">BAM</option>
+                            <option value="vcf">VCF</option>
+                            <option value="fasta">FASTA</option>
+                            <option value="csv">CSV</option>
+                            <option value="json">JSON</option>
+                        </select>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="files-table">
+                                <thead>
+                                    <tr>
+                                        <th>Filename</th>
+                                        <th>Type</th>
+                                        <th>Size</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="files-tbody">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-3">Loading files...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Tool Registration -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Register Custom Tool</h5>
+                        <span class="badge bg-info">Beta</span>
+                    </div>
+                    <div class="card-body">
+                        <form id="custom-tool-form">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Tool Name *</label>
+                                    <input type="text" class="form-control" id="custom-name" required placeholder="e.g., MyCustomTool">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Description *</label>
+                                    <input type="text" class="form-control" id="custom-description" required placeholder="Brief description">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Category *</label>
+                                    <select class="form-select" id="custom-category" required>
+                                        <option value="">Select category</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Subcategory</label>
+                                    <select class="form-select" id="custom-subcategory">
+                                        <option value="">Select subcategory</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Package Manager</label>
+                                    <select class="form-select" id="custom-pkgmgr">
+                                        <option value="conda">Conda</option>
+                                        <option value="pip">Pip</option>
+                                        <option value="docker">Docker</option>
+                                        <option value="source">Source</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Repository URL</label>
+                                    <input type="url" class="form-control" id="custom-url" placeholder="https://github.com/user/tool">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Input Formats (comma-separated)</label>
+                                    <input type="text" class="form-control" id="custom-inputs" placeholder=".fasta, .fastq">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Output Formats (comma-separated)</label>
+                                    <input type="text" class="form-control" id="custom-outputs" placeholder=".bam, .vcf">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Languages (comma-separated)</label>
+                                    <input type="text" class="form-control" id="custom-languages" placeholder="Python, Shell">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">License</label>
+                                    <input type="text" class="form-control" id="custom-license" placeholder="MIT, Apache-2.0">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Setup Instructions</label>
+                                    <textarea class="form-control" id="custom-setup" rows="3" placeholder="conda install -c bioconda mytool"></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <button type="button" class="btn btn-primary" id="submit-custom-tool">
+                                        <i class="bi bi-plus-circle"></i> Register Tool
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Tools List -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-tools"></i> Custom Tools</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="custom-tools-list">
+                            <p class="text-muted text-center">Loading custom tools...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 mt-5 border-top">
+        <p class="text-muted mb-0">
+            <i class="bi bi-virus"></i> Virometrics - Viral Bioinformatics Platform
+        </p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/data-manager.js"></script>
+    <script src="js/custom-tool.js"></script>
+    <script>
+        // Initialize custom tool registration on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initCustomToolRegistration();
+        });
+    </script>
+</body>
+</html>

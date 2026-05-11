@@ -1,0 +1,167 @@
+{
+  "name": "De Novo Assembly Pipeline",
+  "description": "Complete de novo assembly workflow for viral genomes. Performs quality control, assembly, and assembly quality assessment.",
+  "nodes": [
+    {
+      "node_id": "fastqc_1",
+      "tool_id": 1,
+      "name": "Initial QC",
+      "config": {
+        "input_format": "fastq",
+        "output_dir": "qc_reports",
+        "threads": 4
+      },
+      "x": 50,
+      "y": 200,
+      "inputs": [],
+      "outputs": ["qc_report"]
+    },
+    {
+      "node_id": "fastp_1",
+      "tool_id": 13,
+      "name": "Read Filtering",
+      "config": {
+        "adapter_detection": true,
+        "quality_threshold": 20,
+        "length_cutoff": 50,
+        "threads": 4
+      },
+      "x": 200,
+      "y": 200,
+      "inputs": ["raw_reads"],
+      "outputs": ["filtered_reads", "filter_report"]
+    },
+    {
+      "node_id": "spades_1",
+      "tool_id": 8,
+      "name": "SPAdes Assembly",
+      "config": {
+        "assembler": "spades",
+        "genome_size": "50000",
+        "kmer_sizes": "21,33,55",
+        "threads": 8,
+        "memory_gb": 16
+      },
+      "x": 400,
+      "y": 200,
+      "inputs": ["filtered_reads"],
+      "outputs": ["assembly_fasta", "assembly_stats"]
+    },
+    {
+      "node_id": "megahit_1",
+      "tool_id": 9,
+      "name": "MEGAHIT Assembly",
+      "config": {
+        "assembler": "megahit",
+        "kmin": 21,
+        "kmax": 127,
+        "kstep": 10,
+        "threads": 8
+      },
+      "x": 400,
+      "y": 350,
+      "inputs": ["filtered_reads"],
+      "outputs": ["megahit_assembly", "megahit_stats"]
+    },
+    {
+      "node_id": "quast_1",
+      "tool_id": 14,
+      "name": "Assembly Assessment",
+      "config": {
+        "reference_genome": "reference.fasta",
+        "output_dir": "quast_results",
+        "threads": 4
+      },
+      "x": 600,
+      "y": 200,
+      "inputs": ["assembly_fasta", "reference"],
+      "outputs": ["quast_report"]
+    },
+    {
+      "node_id": "checkm_1",
+      "tool_id": 15,
+      "name": "Assembly Quality",
+      "config": {
+        "lineage_wf": true,
+        "threads": 4
+      },
+      "x": 600,
+      "y": 350,
+      "inputs": ["megahit_assembly"],
+      "outputs": ["checkm_report"]
+    },
+    {
+      "node_id": "prodigal_1",
+      "tool_id": 16,
+      "name": "Gene Prediction",
+      "config": {
+        "mode": "meta",
+        "output_format": "gff",
+        "translate_table": 11
+      },
+      "x": 800,
+      "y": 200,
+      "inputs": ["assembly_fasta"],
+      "outputs": ["predicted_genes_gff", "predicted_genes_faa"]
+    },
+    {
+      "node_id": "blast_1",
+      "tool_id": 11,
+      "name": "Functional Annotation",
+      "config": {
+        "database": "nr",
+        "evalue_threshold": 1e-5,
+        "max_hits": 10,
+        "threads": 4
+      },
+      "x": 1000,
+      "y": 200,
+      "inputs": ["predicted_genes_faa"],
+      "outputs": ["blast_results"]
+    }
+  ],
+  "connections": [
+    {
+      "connection_id": "conn_1",
+      "source_node_id": "fastp_1",
+      "source_output": "filtered_reads",
+      "target_node_id": "spades_1",
+      "target_input": "filtered_reads"
+    },
+    {
+      "connection_id": "conn_2",
+      "source_node_id": "fastp_1",
+      "source_output": "filtered_reads",
+      "target_node_id": "megahit_1",
+      "target_input": "filtered_reads"
+    },
+    {
+      "connection_id": "conn_3",
+      "source_node_id": "spades_1",
+      "source_output": "assembly_fasta",
+      "target_node_id": "quast_1",
+      "target_input": "assembly_fasta"
+    },
+    {
+      "connection_id": "conn_4",
+      "source_node_id": "spades_1",
+      "source_output": "assembly_fasta",
+      "target_node_id": "prodigal_1",
+      "target_input": "assembly_fasta"
+    },
+    {
+      "connection_id": "conn_5",
+      "source_node_id": "prodigal_1",
+      "source_output": "predicted_genes_faa",
+      "target_node_id": "blast_1",
+      "target_input": "predicted_genes_faa"
+    }
+  ],
+  "metadata": {
+    "category": "Assembly",
+    "complexity": "advanced",
+    "estimated_runtime": "2-4 hours",
+    "input_requirements": ["fastq"],
+    "output_formats": ["fasta", "gff", "faa", "tsv"]
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "name": "Variant Calling Pipeline",
+  "description": "Complete variant calling workflow for viral genomes. Processes raw sequencing reads through quality control, alignment, and variant detection.",
+  "nodes": [
+    {
+      "node_id": "fastqc_1",
+      "tool_id": 1,
+      "name": "Initial QC",
+      "config": {
+        "input_format": "fastq",
+        "output_dir": "qc_reports",
+        "threads": 4
+      },
+      "x": 50,
+      "y": 200,
+      "inputs": [],
+      "outputs": ["qc_report"]
+    },
+    {
+      "node_id": "trimmomatic_1",
+      "tool_id": 2,
+      "name": "Read Trimming",
+      "config": {
+        "adapter_seq": "AGATCGGAAGAGC",
+        "min_quality": 20,
+        "min_length": 36,
+        "threads": 4
+      },
+      "x": 200,
+      "y": 200,
+      "inputs": ["raw_reads"],
+      "outputs": ["trimmed_reads"]
+    },
+    {
+      "node_id": "bwa_1",
+      "tool_id": 3,
+      "name": "Read Alignment",
+      "config": {
+        "reference_genome": "reference.fasta",
+        "algorithm": "mem",
+        "threads": 8
+      },
+      "x": 400,
+      "y": 200,
+      "inputs": ["trimmed_reads", "reference"],
+      "outputs": ["alignment_bam"]
+    },
+    {
+      "node_id": "samtools_1",
+      "tool_id": 5,
+      "name": "SAMtools Processing",
+      "config": {
+        "operations": ["sort", "index", "depth"],
+        "threads": 4
+      },
+      "x": 600,
+      "y": 200,
+      "inputs": ["alignment_bam"],
+      "outputs": ["sorted_bam", "bam_index", "depth_coverage"]
+    },
+    {
+      "node_id": "ivar_1",
+      "tool_id": 6,
+      "name": "Variant Calling",
+      "config": {
+        "min_freq": 0.03,
+        "min_coverage": 100,
+        "trim_primer": true,
+        "min_base_quality": 20
+      },
+      "x": 800,
+      "y": 200,
+      "inputs": ["sorted_bam", "primer_bed"],
+      "outputs": ["variants_vcf", "variants_tsv"]
+    },
+    {
+      "node_id": "bcftools_1",
+      "tool_id": 7,
+      "name": "VCF Filtering",
+      "config": {
+        "filter_expression": "QUAL>30 && DP>100",
+        "output_format": "vcf"
+      },
+      "x": 1000,
+      "y": 200,
+      "inputs": ["variants_vcf"],
+      "outputs": ["filtered_vcf"]
+    }
+  ],
+  "connections": [
+    {
+      "connection_id": "conn_1",
+      "source_node_id": "trimmomatic_1",
+      "source_output": "trimmed_reads",
+      "target_node_id": "bwa_1",
+      "target_input": "raw_reads"
+    },
+    {
+      "connection_id": "conn_2",
+      "source_node_id": "bwa_1",
+      "source_output": "alignment_bam",
+      "target_node_id": "samtools_1",
+      "target_input": "alignment_bam"
+    },
+    {
+      "connection_id": "conn_3",
+      "source_node_id": "samtools_1",
+      "source_output": "sorted_bam",
+      "target_node_id": "ivar_1",
+      "target_input": "sorted_bam"
+    },
+    {
+      "connection_id": "conn_4",
+      "source_node_id": "ivar_1",
+      "source_output": "variants_vcf",
+      "target_node_id": "bcftools_1",
+      "target_input": "variants_vcf"
+    }
+  ],
+  "metadata": {
+    "category": "Variant Calling",
+    "complexity": "intermediate",
+    "estimated_runtime": "30-60 minutes",
+    "input_requirements": ["fastq", "reference_fasta", "primer_bed"],
+    "output_formats": ["vcf", "tsv", "bam"]
+  }
+}

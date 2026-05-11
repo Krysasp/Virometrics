@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>Execute Workflow - Virometrics</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        .workflow-output-container {
+            max-height: 500px;
+            overflow-y: auto;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            padding: 1rem;
+            border-radius: 6px;
+        }
+        .workflow-step {
+            background: rgba(13, 110, 253, 0.1);
+            border-left: 3px solid #0d6efd;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .workflow-step.completed {
+            border-left-color: #198754;
+            background: rgba(25, 135, 84, 0.1);
+        }
+        .workflow-step.running {
+            border-left-color: #ffc107;
+            background: rgba(255, 193, 7, 0.1);
+        }
+        .workflow-step.failed {
+            border-left-color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
+        }
+        .step-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .step-status.pending { background: #6c757d; }
+        .step-status.running { background: #ffc107; animation: pulse 1s infinite; }
+        .step-status.completed { background: #198754; }
+        .step-status.failed { background: #dc3545; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .progress-workflow {
+            height: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-virus"></i> <strong>Virometrics</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="workflow_builder.html">Workflow Builder</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="execute-workflow.html">Execute Workflow</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="execution_history.html">History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="data.html">Data</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="register-tool.html">Register Tool</a>
+                    </li>
+                </ul>
+                <button class="btn btn-outline-light btn-sm" id="themeToggle">
+                    <i class="bi bi-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid dashboard-container" style="margin-top: 70px;">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="section-title">Execute Workflow</h1>
+                <p class="lead">Run a predefined workflow with multiple tool steps</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Left Column: Workflow Selection -->
+            <div class="col-lg-5">
+                <!-- Workflow Selector -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Select Workflow</h5>
+                    </div>
+                    <div class="card-body">
+                        <label class="form-label">Choose a workflow to execute</label>
+                        <select class="form-select" id="workflow-select">
+                            <option value="">-- Select a workflow --</option>
+                        </select>
+                        <small class="text-muted d-block mt-2">
+                            Workflows are created in the <a href="workflow_builder.html">Workflow Builder</a>
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Workflow Details -->
+                <div class="card mb-3" id="workflow-details-card" style="display: none;">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Workflow Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="workflow-details">
+                            <h6 id="workflow-name"></h6>
+                            <p id="workflow-description" class="text-muted small mb-2"></p>
+                            <div class="d-flex justify-content-between small">
+                                <span><i class="bi bi-clock"></i> Created: <span id="workflow-created"></span></span>
+                                <span><i class="bi bi-person"></i> By: <span id="workflow-created-by"></span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workflow Steps Preview -->
+                <div class="card mb-3" id="workflow-steps-card" style="display: none;">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-list-check"></i> Workflow Steps</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="workflow-steps-preview">
+                            <!-- Steps will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Execution Parameters -->
+                <div class="card mb-3" id="execution-params-card" style="display: none;">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-sliders"></i> Execution Parameters</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="execution-params">
+                            <!-- Parameters will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Execute Button -->
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" id="btn-execute-workflow" disabled>
+                        <i class="bi bi-play-fill"></i> Execute Workflow
+                    </button>
+                    <button class="btn btn-outline-secondary" id="btn-stop-workflow" disabled>
+                        <i class="bi bi-stop-fill"></i> Stop Workflow
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column: Execution Status & Output -->
+            <div class="col-lg-7">
+                <!-- Execution Status -->
+                <div class="card mb-3" id="execution-status-card" style="display: none;">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-activity"></i> Execution Status</h5>
+                        <span id="execution-status-badge" class="badge bg-secondary">Pending</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted">Execution ID</small>
+                                <div id="execution-id" class="fw-bold">-</div>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">Started</small>
+                                <div id="execution-started">-</div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">Progress</small>
+                            <div class="progress progress-workflow">
+                                <div id="execution-progress-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between small text-muted">
+                                <span id="execution-progress-text">0/0 steps completed</span>
+                                <span id="execution-elapsed">00:00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step Execution Status -->
+                <div class="card mb-3" id="step-status-card" style="display: none;">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-list-task"></i> Step Status</h5>
+                    </div>
+                    <div class="card-body" id="step-status-list">
+                        <!-- Step statuses will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Execution Output -->
+                <div class="card" id="execution-output-card" style="display: none;">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-terminal"></i> Execution Output</h5>
+                        <button class="btn btn-sm btn-outline-secondary" id="btn-clear-output">
+                            <i class="bi bi-trash"></i> Clear
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="workflow-output" class="workflow-output-container">
+                            <div class="text-muted text-center py-4">
+                                <i class="bi bi-terminal display-6"></i>
+                                <p class="mt-2">Workflow output will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 mt-5 border-top">
+        <p class="text-muted mb-0">
+            <i class="bi bi-virus"></i> Virometrics - Workflow Execution Engine
+        </p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/execute-workflow.js"></script>
+</body>
+</html>

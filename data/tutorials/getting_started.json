@@ -1,0 +1,70 @@
+{
+  "id": "getting_started",
+  "title": "Getting Started with Virometrics",
+  "description": "Learn the basics of the Virometrics platform",
+  "duration_minutes": 10,
+  "difficulty": "beginner",
+  "steps": [
+    {
+      "index": 0,
+      "title": "Welcome to Virometrics",
+      "description": "<p>Virometrics is a comprehensive bioinformatics platform that streamlines your sequence analysis workflow.</p><p>In this tutorial, you'll learn how to load data, run tools, and export results.</p>",
+      "interactive": false,
+      "tip": "You can navigate between steps using the Previous and Next buttons, or use the arrow keys on your keyboard."
+    },
+    {
+      "index": 1,
+      "title": "Loading Sequence Data",
+      "description": "<p>The first step in any analysis is loading your sequence data. Virometrics supports FASTA, FASTQ, and other common formats.</p><p>Click the Run Demo button below to simulate loading a FASTA file.</p>",
+      "interactive": true,
+      "demoId": "fastaInput",
+      "demoLabel": "FASTA file path:",
+      "demoPlaceholder": "/data/sample.fasta",
+      "demoValue": "",
+      "onInput": "function(value) { return value ? 'Validating: ' + value : 'Enter a file path'; }",
+      "onExecute": "function(value) { return value ? 'Loaded ' + value + ' successfully!' : 'Please enter a file path'; }",
+      "tip": "Supported formats: .fasta, .fa, .fastq, .fq, .bam, .sam"
+    },
+    {
+      "index": 2,
+      "title": "Selecting Analysis Tools",
+      "description": "<p>Virometrics provides a rich collection of bioinformatics tools for sequence analysis, alignment, variant calling, and more.</p><p>Browse the available tools in the Tools section to see what's available.</p>",
+      "interactive": false,
+      "tip": "Tools are organized by category: Assembly, Alignment, Variant Calling, Quality Control, and Export."
+    },
+    {
+      "index": 3,
+      "title": "Configuring Parameters",
+      "description": "<p>Each tool has configurable parameters that control its behavior. Common parameters include:</p><ul><li>Quality threshold for filtering</li><li>Expected insert size for paired-end data</li><li>Number of threads for parallel processing</li><li>Output format preferences</li></ul>",
+      "interactive": false,
+      "tip": "Use sensible defaults for most parameters. Only change settings if you have specific requirements."
+    },
+    {
+      "index": 4,
+      "title": "Running the Analysis",
+      "description": "<p>Once configured, click the Run button to start your analysis. The execution will be tracked in real-time.</p><p>You can monitor progress through the Execution History panel.</p>",
+      "interactive": true,
+      "demoId": "runButton",
+      "demoLabel": "Execute analysis:",
+      "demoPlaceholder": "Start FASTQ QC",
+      "onExecute": "function() { return 'Analysis started! Monitor progress in Execution History.'; }",
+      "tip": "Long-running analyses can be paused and resumed. Checkpoints are automatically saved."
+    },
+    {
+      "index": 5,
+      "title": "Viewing Results",
+      "description": "<p>Results are automatically saved to your workspace. Browse them in the Data section.</p><p>You can view quality reports, alignment statistics, and variant calls.</p>",
+      "interactive": false,
+      "tip": "Results are organized by execution, making it easy to compare different runs."
+    },
+    {
+      "index": 6,
+      "title": "Exporting Results",
+      "description": "<p>Export your results in various formats suitable for publication or downstream analysis:</p><ul><li>VCF for variants</li><li>FASTA/FASTQ for sequences</li><li>JSON for programmatic access</li><li>HTML reports for sharing</li></ul>",
+      "interactive": false,
+      "tip": "Exported files are compressed by default to save space."
+    }
+  ],
+  "next_tutorial": "variant_calling",
+  "tags": ["basics", "workflow", "beginner"]
+}

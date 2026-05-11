@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  # Main web application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - FLASK_DEBUG=${FLASK_DEBUG:-false}
+      - REDIS_URL=redis://redis:6379/0
+      - VIOMETRICS_SECRET=${VIOMETRICS_SECRET:-dev-secret-key}
+    depends_on:
+      - redis
+      - db
+    networks:
+      - virometrics-net
+    restart: unless-stopped
+
+  # Redis for job queue
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - virometrics-net
+    restart: unless-stopped
+
+  # SQLite database (can be replaced with PostgreSQL in production)
+  db:
+    image: linuxserver/sqlite:latest
+    volumes:
+      - ./data:/data
+    environment:
+      - PUID=1000
+      - PGID=1000
+    networks:
+      - virometrics-net
+    restart: unless-stopped
+
+  # Worker nodes for job processing
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - WORKER_NAME=${WORKER_NAME:-worker1}
+      - GPU_ENABLED=${GPU_ENABLED:-false}
+    depends_on:
+      - redis
+    networks:
+      - virometrics-net
+    restart: unless-stopped
+    deploy:
+      replicas: ${WORKER_REPLICAS:-2}
+
+  # Optional: GPU-enabled worker
+  worker-gpu:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+      args:
+        WITH_GPU: "true"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - WORKER_NAME=${GPU_WORKER_NAME:-gpu-worker1}
+      - GPU_ENABLED=true
+    depends_on:
+      - redis
+    networks:
+      - virometrics-net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+networks:
+  virometrics-net:
+    driver: bridge
+
+volumes:
+  redis_data:

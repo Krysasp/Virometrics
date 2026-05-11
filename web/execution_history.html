@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Execution History - Virometrics</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-iocn.css" rel="stylesheet">
+
+    <!-- DataTables -->
+    <link href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        .execution-detail-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+        .execution-detail-panel.dark {
+            background: #212529;
+            border: 1px solid #495057;
+        }
+        .audit-timeline {
+            border-left: 3px solid #0d6efd;
+            padding-left: 20px;
+            margin-left: 10px;
+        }
+        .audit-event {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .audit-event::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #0d6efd;
+        }
+        .audit-event.completed::before {
+            background: #198754;
+        }
+        .audit-event.failed::before {
+            background: #dc3545;
+        }
+        .audit-event.warning::before {
+            background: #ffc107;
+        }
+        .event-details {
+            background: #f8f9fa;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 5px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .status-completed {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+        .status-running {
+            background: #cfe2ff;
+            color: #084298;
+        }
+        .status-failed {
+            background: #f8d7da;
+            color: #842029;
+        }
+        .status-timeout {
+            background: #fff3cd;
+            color: #664d03;
+        }
+        .status-cancelled {
+            background: #e2e3e5;
+            color: #41464b;
+        }
+        .status-pending {
+            background: #f8f9fa;
+            color: #495057;
+        }
+        .filter-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .filter-panel.dark {
+            background: #343a40;
+        }
+        #execution-table_wrapper {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-virus"></i> <strong>Virometrics</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="workflow_builder.html">Workflow Builder</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="execute.html">Execute</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="execution_history.html">History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="data.html">Data</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="register-tool.html">Register Tool</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="execute-workflow.html">Execute Workflow</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-outline-light btn-sm me-2" id="themeToggle">
+                        <i class="bi bi-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid" style="margin-top: 70px;">
+        <div class="row">
+            <!-- Left Panel: Execution List -->
+            <div class="col-md-7">
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Execution History</h5>
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm" id="statusFilter" style="width: 120px;">
+                                <option value="">All Status</option>
+                                <option value="completed">Completed</option>
+                                <option value="running">Running</option>
+                                <option value="failed">Failed</option>
+                                <option value="timeout">Timeout</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                            <select class="form-select form-select-sm" id="typeFilter" style="width: 120px;">
+                                <option value="">All Types</option>
+                                <option value="tool">Tool</option>
+                                <option value="workflow">Workflow</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Stats Summary -->
+                        <div class="row mb-3">
+                            <div class="col-3">
+                                <div class="text-center">
+                                    <small class="text-muted">Total</small>
+                                    <h6 id="stat-total" class="mb-0">-</h6>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-center">
+                                    <small class="text-muted">Completed</small>
+                                    <h6 id="stat-completed" class="mb-0 text-success">-</h6>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-center">
+                                    <small class="text-muted">Failed</small>
+                                    <h6 id="stat-failed" class="mb-0 text-danger">-</h6>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-center">
+                                    <small class="text-muted">Running</small>
+                                    <h6 id="stat-running" class="mb-0 text-primary">-</h6>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Executions Table -->
+                        <table id="execution-table" class="table table-hover" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Type</th>
+                                    <th>Tool/Workflow</th>
+                                    <th>Status</th>
+                                    <th>Started</th>
+                                    <th>Duration</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Execution Details -->
+            <div class="col-md-5">
+                <div class="execution-detail-panel">
+                    <h5><i class="bi bi-file-text"></i> Execution Details</h5>
+                    <hr>
+                    
+                    <div id="execution-detail">
+                        <p class="text-muted">Select an execution to view details</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Panel: Statistics -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Execution Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6>Execution Trends (30 days)</h6>
+                                <div id="trends-chart" style="height: 200px;"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>Executions by Tool</h6>
+                                <div id="tools-chart" style="height: 200px;"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>Status Distribution</h6>
+                                <div id="status-chart" style="height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Full Audit Trail -->
+    <div class="modal fade" id="auditModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Audit Trail - <span id="auditTitle">-</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="audit-timeline" id="auditTimeline">
+                        <!-- Audit events will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script>
+        let executionTable = null;
+        let selectedExecutionId = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initExecutionTable();
+            loadExecutions();
+            loadStatistics();
+        });
+
+        function initExecutionTable() {
+            executionTable = $('#execution-table').DataTable({
+                pageLength: 15,
+                order: [[4, 'desc']],
+                columns: [
+                    { width: '8%' },
+                    { width: '10%' },
+                    { width: '25%' },
+                    { width: '12%' },
+                    { width: '15%' },
+                    { width: '15%' },
+                    { width: '15%' }
+                ],
+                language: {
+                    emptyTable: "No executions found"
+                }
+            });
+        }
+
+        function loadExecutions() {
+            // Fetch from API
+            fetch('/api/executions?limit=50')
+                .then(response => response.json())
+                .then(data => {
+                    updateExecutionTable(data.executions || []);
+                    updateStats(data.stats || {});
+                })
+                .catch(error => {
+                    console.error('Error loading executions:', error);
+                    // Use sample data for demo
+                    const sampleExecutions = getSampleExecutions();
+                    updateExecutionTable(sampleExecutions);
+                    updateStats(getSampleStats());
+                });
+        }
+
+        function getSampleExecutions() {
+            return [
+                { execution_id: 1, execution_type: 'tool', tool_id: 1, tool_name: 'FastQC', 
+                  status: 'completed', started_at: '2026-05-10 10:30:00', completed_at: '2026-05-10 10:35:00' },
+                { execution_id: 2, execution_type: 'workflow', workflow_id: 1, workflow_name: 'Variant Calling',
+                  status: 'running', started_at: '2026-05-10 11:00:00', completed_at: null },
+                { execution_id: 3, execution_type: 'tool', tool_id: 3, tool_name: 'BWA',
+                  status: 'failed', started_at: '2026-05-10 09:00:00', completed_at: '2026-05-10 09:15:00',
+                  status_message: 'Reference file not found' },
+                { execution_id: 4, execution_type: 'tool', tool_id: 8, tool_name: 'SPAdes',
+                  status: 'completed', started_at: '2026-05-10 08:00:00', completed_at: '2026-05-10 09:30:00' },
+                { execution_id: 5, execution_type: 'tool', tool_id: 6, tool_name: 'iVar',
+                  status: 'timeout', started_at: '2026-05-09 14:00:00', completed_at: '2026-05-09 15:00:00' }
+            ];
+        }
+
+        function getSampleStats() {
+            return {
+                total: 5,
+                completed: 2,
+                failed: 1,
+                running: 1,
+                timeout: 1,
+                by_tool: [
+                    { tool_name: 'FastQC', count: 10 },
+                    { tool_name: 'BWA', count: 8 },
+                    { tool_name: 'SPAdes', count: 5 }
+                ]
+            };
+        }
+
+        function updateExecutionTable(executions) {
+            executionTable.clear();
+            
+            executions.forEach(exec => {
+                const duration = exec.completed_at ? 
+                    calculateDuration(exec.started_at, exec.completed_at) : 
+                    'Running...';
+                
+                executionTable.row.add([
+                    exec.execution_id,
+                    exec.execution_type,
+                    exec.tool_name || exec.workflow_name || `ID: ${exec.tool_id || exec.workflow_id}`,
+                    `<span class="status-badge status-${exec.status}">${exec.status}</span>`,
+                    exec.started_at,
+                    duration,
+                    `<button class="btn btn-sm btn-outline-primary" onclick="showExecutionDetails(${exec.execution_id})">
+                        <i class="bi bi-eye"></i> Details
+                    </button>`
+                ]);
+            });
+            
+            executionTable.draw();
+        }
+
+        function calculateDuration(start, end) {
+            const startDate = new Date(start);
+            const endDate = new Date(end);
+            const diffMs = endDate - startDate;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffSecs = Math.floor((diffMs % 60000) / 1000);
+            return `${diffMins}m ${diffSecs}s`;
+        }
+
+        function updateStats(stats) {
+            document.getElementById('stat-total').textContent = stats.total || 0;
+            document.getElementById('stat-completed').textContent = stats.completed || 0;
+            document.getElementById('stat-failed').textContent = (stats.failed || 0) + (stats.timeout || 0);
+            document.getElementById('stat-running').textContent = stats.running || 0;
+        }
+
+        function showExecutionDetails(executionId) {
+            selectedExecutionId = executionId;
+            
+            // Get execution details
+            fetch(`/api/executions/${executionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    renderExecutionDetail(data.execution);
+                    loadAuditTrail(executionId);
+                })
+                .catch(error => {
+                    const sample = getSampleExecutions().find(e => e.execution_id === executionId);
+                    renderExecutionDetail(sample);
+                });
+        }
+
+        function renderExecutionDetail(exec) {
+            const detailDiv = document.getElementById('execution-detail');
+            
+            if (!exec) {
+                detailDiv.innerHTML = '<p class="text-muted">Select an execution to view details</p>';
+                return;
+            }
+            
+            const duration = exec.completed_at ? 
+                calculateDuration(exec.started_at, exec.completed_at) : 
+                'Running...';
+            
+            detailDiv.innerHTML = `
+                <div class="mb-3">
+                    <strong>Execution ID:</strong> ${exec.execution_id}
+                </div>
+                <div class="mb-3">
+                    <strong>Type:</strong> ${exec.execution_type}
+                </div>
+                <div class="mb-3">
+                    <strong>Tool/Workflow:</strong> ${exec.tool_name || exec.workflow_name || 'N/A'}
+                </div>
+                <div class="mb-3">
+                    <strong>Status:</strong> 
+                    <span class="status-badge status-${exec.status}">${exec.status}</span>
+                </div>
+                <div class="mb-3">
+                    <strong>Started:</strong> ${exec.started_at}
+                </div>
+                <div class="mb-3">
+                    <strong>Completed:</strong> ${exec.completed_at || 'N/A'}
+                </div>
+                <div class="mb-3">
+                    <strong>Duration:</strong> ${duration}
+                </div>
+                ${exec.command ? `<div class="mb-3"><strong>Command:</strong><br><code class="d-block p-2 bg-light">${exec.command}</code></div>` : ''}
+                ${exec.status_message ? `<div class="mb-3"><strong>Status Message:</strong><br>${exec.status_message}</div>` : ''}
+                <div class="mt-3">
+                    <button class="btn btn-sm btn-outline-primary" onclick="showAuditTrail(${exec.execution_id})">
+                        <i class="bi bi-list-ul"></i> View Full Audit Trail
+                    </button>
+                </div>
+            `;
+        }
+
+        function loadAuditTrail(executionId) {
+            fetch(`/api/executions/${executionId}/audit`)
+                .then(response => response.json())
+                .then(data => {
+                    renderAuditTrail(data.audit_events || []);
+                })
+                .catch(error => {
+                    renderAuditTrail(getSampleAuditTrail());
+                });
+        }
+
+        function getSampleAuditTrail() {
+            return [
+                { event_type: 'execution_started', occurred_at: '2026-05-10 10:30:00', details: { command: 'fastqc input.fastq' } },
+                { event_type: 'output_written', occurred_at: '2026-05-10 10:32:00', details: { file: 'results.html' } },
+                { event_type: 'execution_completed', occurred_at: '2026-05-10 10:35:00', details: { return_code: 0 } }
+            ];
+        }
+
+        function renderAuditTrail(events) {
+            const timeline = document.getElementById('auditTimeline');
+            
+            if (!events.length) {
+                timeline.innerHTML = '<p class="text-muted small">No audit events</p>';
+                return;
+            }
+            
+            timeline.innerHTML = events.map(event => {
+                let eventClass = '';
+                if (event.event_type.includes('completed')) eventClass = 'completed';
+                else if (event.event_type.includes('failed')) eventClass = 'failed';
+                else if (event.event_type.includes('warning')) eventClass = 'warning';
+                
+                return `
+                    <div class="audit-event ${eventClass}">
+                        <small class="text-muted">${event.occurred_at}</small>
+                        <div><strong>${event.event_type}</strong></div>
+                        <div class="event-details">${JSON.stringify(event.details)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showAuditTrail(executionId) {
+            const modal = new bootstrap.Modal(document.getElementById('auditModal'));
+            document.getElementById('auditTitle').textContent = `Execution #${executionId}`;
+            
+            fetch(`/api/executions/${executionId}/audit`)
+                .then(response => response.json())
+                .then(data => {
+                    renderAuditTrail(data.audit_events || []);
+                })
+                .catch(error => {
+                    renderAuditTrail(getSampleAuditTrail());
+                });
+            
+            modal.show();
+        }
+
+        function loadStatistics() {
+            const stats = getSampleStats();
+            
+            // Status distribution pie chart
+            Plotly.newPlot('status-chart', [{
+                labels: ['Completed', 'Failed', 'Running', 'Timeout'],
+                values: [stats.completed || 0, stats.failed || 0, stats.running || 0, stats.timeout || 0],
+                type: 'pie',
+                hole: 0.4
+            }], {
+                margin: { t: 10, b: 10, l: 10, r: 10 },
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.2 }
+            });
+            
+            // Top tools bar chart
+            Plotly.newPlot('tools-chart', [{
+                x: stats.by_tool.map(t => t.count),
+                y: stats.by_tool.map(t => t.tool_name),
+                type: 'bar',
+                orientation: 'h'
+            }], {
+                margin: { t: 10, b: 10, l: 80, r: 10 },
+                showlegend: false
+            });
+        }
+
+        // Filter handlers
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            const status = this.value;
+            const filtered = getSampleExecutions().filter(e => !status || e.status === status);
+            updateExecutionTable(filtered);
+        });
+
+        document.getElementById('typeFilter').addEventListener('change', function() {
+            const type = this.value;
+            const filtered = getSampleExecutions().filter(e => !type || e.execution_type === type);
+            updateExecutionTable(filtered);
+        });
+    </script>
+</body>
+</html>

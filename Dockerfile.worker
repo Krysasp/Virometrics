@@ -1,0 +1,86 @@
+FROM python:3.11-slim as base
+
+LABEL maintainer="Virometrics Team"
+LABEL description="Virometrics worker node for bioinformatics tool execution"
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+# Install base dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    make \
+    libffi-dev \
+    libssl-dev \
+    libhdf5-dev \
+    curl \
+    wget \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
+# Install worker-specific dependencies
+RUN pip install \
+    rq \
+    redis \
+    psutil \
+    celery
+
+# Base image for CPU workers
+FROM base as cpu-worker
+
+ARG WITH_GPU=false
+
+# Copy application code
+COPY . .
+
+# Create directories
+RUN mkdir -p \
+    /app/data/uploads \
+    /app/data/outputs \
+    /app/data/checkpoints \
+    /app/data/logs
+
+# Worker command
+CMD ["rq", "worker", "virometrics", "--with", "scheduler", "-u", "${REDIS_URL:-redis://localhost:6379/0}"]
+
+# GPU-enabled worker
+FROM base as gpu-worker
+
+ARG WITH_GPU=true
+
+# Install CUDA toolkit and cuDNN
+RUN apt-get update && apt-get install -y \
+    cuda-toolkit-12-0 \
+    libcudnn8 \
+    libcudnn8-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install GPU-specific Python packages
+RUN pip install \
+    torch --index-url https://download.pytorch.org/whl/cu118 \
+    tensorflow[and-cuda] \
+    cupy-cuda11x
+
+# Copy application code
+COPY . .
+
+# Create directories
+RUN mkdir -p \
+    /app/data/uploads \
+    /app/data/outputs \
+    /app/data/checkpoints \
+    /app/data/logs
+
+# GPU worker command
+CMD ["rq", "worker", "virometrics-gpu", "--with", "scheduler", "-u", "${REDIS_URL:-redis://localhost:6379/0}"]

@@ -1,0 +1,593 @@
+openapi: 3.0.3
+info:
+  title: Virometrics API
+  description: |
+    API for the Virometrics bioinformatics platform.
+    Provides access to tools, workflows, data management, and plugin system.
+  version: 2.0.0
+  contact:
+    name: Virometrics Team
+    email: api@virometrics.io
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.virometrics.io/v1
+    description: Production server
+  - url: https://api.virometrics.io/v2
+    description: V2 server
+
+paths:
+  /tools:
+    get:
+      summary: List available tools
+      tags:
+        - Tools
+      parameters:
+        - name: name
+          in: query
+          description: Filter by tool name
+          schema:
+            type: string
+        - name: source
+          in: query
+          description: Filter by source (bioconda, system, git)
+          schema:
+            type: string
+        - name: is_active
+          in: query
+          description: Filter by active status
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of tools
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    post:
+      summary: Register a new tool
+      tags:
+        - Tools
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToolDefinition'
+      responses:
+        '201':
+          description: Tool registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolRegistration'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /tools/{tool_id}:
+    get:
+      summary: Get tool information
+      tags:
+        - Tools
+      parameters:
+        - name: tool_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: version
+          in: query
+          description: Specific version
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tool information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolInfo'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /workflows:
+    get:
+      summary: List workflows
+      tags:
+        - Workflows
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, running, completed, failed]
+      responses:
+        '200':
+          description: List of workflows
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowList'
+
+    post:
+      summary: Create a new workflow
+      tags:
+        - Workflows
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowDefinition'
+      responses:
+        '201':
+          description: Workflow created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workflow'
+
+  /workflows/{workflow_id}/execute:
+    post:
+      summary: Execute a workflow
+      tags:
+        - Workflows
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: workflow_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input_files:
+                  type: array
+                  items:
+                    type: string
+                parameters:
+                  type: object
+      responses:
+        '202':
+          description: Workflow execution started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowExecution'
+
+  /plugins:
+    get:
+      summary: List available plugins
+      tags:
+        - Plugins
+      parameters:
+        - name: plugin_type
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of plugins
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PluginList'
+
+  /plugins/{plugin_name}/load:
+    post:
+      summary: Load a plugin
+      tags:
+        - Plugins
+      parameters:
+        - name: plugin_name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                config:
+                  type: object
+      responses:
+        '200':
+          description: Plugin loaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PluginInstance'
+
+  /data:
+    get:
+      summary: List data files
+      tags:
+        - Data
+      parameters:
+        - name: file_type
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: List of data files
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataFileList'
+
+  /data/{data_file_id}:
+    get:
+      summary: Get data file information
+      tags:
+        - Data
+      parameters:
+        - name: data_file_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Data file info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataFile'
+
+  /executions:
+    get:
+      summary: List execution history
+      tags:
+        - Executions
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, running, completed, failed]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: List of executions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionList'
+
+  /health:
+    get:
+      summary: Health check
+      tags:
+        - System
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  version:
+                    type: string
+                    example: "2.0.0"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+components:
+  schemas:
+    ToolDefinition:
+      type: object
+      required:
+        - tool_id
+        - name
+        - version
+        - source
+      properties:
+        tool_id:
+          type: integer
+        name:
+          type: string
+        version:
+          type: string
+        description:
+          type: string
+        source:
+          type: string
+          enum: [bioconda, system, git]
+        source_url:
+          type: string
+        input_formats:
+          type: array
+          items:
+            type: string
+        output_formats:
+          type: array
+          items:
+            type: string
+        parameters:
+          type: object
+
+    ToolList:
+      type: object
+      properties:
+        tools:
+          type: array
+          items:
+            $ref: '#/components/schemas/ToolDefinition'
+        total:
+          type: integer
+
+    ToolInfo:
+      type: object
+      properties:
+        definition:
+          $ref: '#/components/schemas/ToolDefinition'
+        installations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ToolInstallation'
+        validations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationResult'
+
+    ToolInstallation:
+      type: object
+      properties:
+        installation_id:
+          type: integer
+        version:
+          type: string
+        install_path:
+          type: string
+        status:
+          type: string
+
+    ValidationResult:
+      type: object
+      properties:
+        validation_id:
+          type: integer
+        test_dataset:
+          type: string
+        status:
+          type: string
+          enum: [passed, failed, warning]
+        validated_at:
+          type: string
+          format: date-time
+
+    ToolRegistration:
+      type: object
+      properties:
+        tool_definition_id:
+          type: integer
+        message:
+          type: string
+
+    WorkflowDefinition:
+      type: object
+      required:
+        - name
+        - steps
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowStep'
+
+    WorkflowStep:
+      type: object
+      required:
+        - tool_id
+        - position
+      properties:
+        tool_id:
+          type: integer
+        position:
+          type: integer
+        config:
+          type: object
+
+    Workflow:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    WorkflowList:
+      type: object
+      properties:
+        workflows:
+          type: array
+          items:
+            $ref: '#/components/schemas/Workflow'
+        total:
+          type: integer
+
+    WorkflowExecution:
+      type: object
+      properties:
+        execution_id:
+          type: integer
+        workflow_id:
+          type: integer
+        status:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+
+    PluginList:
+      type: object
+      properties:
+        plugins:
+          type: array
+          items:
+            $ref: '#/components/schemas/PluginMetadata'
+        total:
+          type: integer
+
+    PluginMetadata:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        description:
+          type: string
+        plugin_type:
+          type: string
+        author:
+          type: string
+
+    PluginInstance:
+      type: object
+      properties:
+        name:
+          type: string
+        status:
+          type: string
+        initialized:
+          type: boolean
+        config:
+          type: object
+
+    DataFile:
+      type: object
+      properties:
+        id:
+          type: integer
+        filename:
+          type: string
+        file_type:
+          type: string
+        file_size:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    DataFileList:
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataFile'
+        total:
+          type: integer
+
+    ExecutionList:
+      type: object
+      properties:
+        executions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Execution'
+        total:
+          type: integer
+
+    Execution:
+      type: object
+      properties:
+        id:
+          type: integer
+        tool_id:
+          type: integer
+        status:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              details:
+                type: object
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Missing or invalid API key"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Resource not found"

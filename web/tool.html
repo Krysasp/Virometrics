@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tool Details - Virometrics</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Plotly.js for charts -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-virus"></i> <strong>Virometrics</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="comparison.html">Comparison</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="browse.html">Browse Tools</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="execute.html">Execute</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="dependencies.html">Dependencies</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="data.html">Data</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="workflow_builder.html">Workflow Builder</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="register-tool.html">Register Tool</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="execute-workflow.html">Execute Workflow</a>
+                    </li>
+                </ul>
+                <button class="btn btn-outline-light btn-sm" id="themeToggle">
+                    <i class="bi bi-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid dashboard-container">
+        <!-- Loading indicator -->
+        <div id="loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading tool details...</p>
+        </div>
+
+        <!-- Tool Content (hidden until loaded) -->
+        <div id="tool-content" style="display: none;">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
+                    <li class="breadcrumb-item active" id="breadcrumb-name">Tool Details</li>
+                </ol>
+            </nav>
+
+            <!-- Tool Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h1 id="tool-name" class="mb-2">Tool Name</h1>
+                                    <p id="tool-description" class="lead text-muted mb-3">Description</p>
+                                    <div id="tool-badges" class="mb-2">
+                                        <!-- Badges will be inserted here -->
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <div class="d-flex flex-wrap justify-content-md-end gap-2">
+                                        <div class="stat-item">
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                            <span id="tool-stars">0</span> stars
+                                        </div>
+                                        <div class="stat-item">
+                                            <i class="bi bi-diagram-3"></i>
+                                            <span id="tool-forks">0</span> forks
+                                        </div>
+                                        <div class="stat-item">
+                                            <i class="bi bi-calendar"></i>
+                                            <span id="tool-updated">Unknown</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <a id="tool-url" href="#" target="_blank" class="btn btn-primary me-2">
+                                            <i class="bi bi-box-arrow-up-right"></i> Visit Tool
+                                        </a>
+                                        <a id="tool-doi" href="#" target="_blank" class="btn btn-outline-secondary" style="display:none;">
+                                            <i class="bi bi-journal-text"></i> DOI
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Info Row -->
+            <div class="row g-3 mb-4">
+                <!-- Left Column -->
+                <div class="col-lg-8">
+                    <!-- Purpose & Description -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Purpose & Description</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="text-muted mb-2">Description</h6>
+                            <p id="tool-desc-full">-</p>
+
+                            <h6 class="text-muted mb-2 mt-3">Purpose</h6>
+                            <p id="tool-purpose">-</p>
+
+                            <h6 class="text-muted mb-2 mt-3">Studies Suited For</h6>
+                            <div id="tool-studies">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Setup Instructions -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-gear"></i> Setup Instructions</h5>
+                        </div>
+                        <div class="card-body">
+                            <pre id="tool-setup" class="bg-light p-3 rounded" style="white-space: pre-wrap;">Loading...</pre>
+                        </div>
+                    </div>
+
+                    <!-- Input/Output -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-arrow-left-right"></i> Input/Output Formats</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-muted">Input Formats</h6>
+                                    <div id="tool-inputs">-</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted">Output Formats</h6>
+                                    <div id="tool-outputs">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-lg-4">
+                    <!-- Tool Info Card -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-list-ul"></i> Tool Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td class="text-muted">Category</td>
+                                    <td id="tool-category">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Subcategory</td>
+                                    <td id="tool-subcategory">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Package Manager</td>
+                                    <td id="tool-pkgmgr">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">License</td>
+                                    <td id="tool-license">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Created</td>
+                                    <td id="tool-created">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Last Updated</td>
+                                    <td id="tool-last-updated">-</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Languages -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-code-slash"></i> Programming Languages</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="tool-languages">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Packages Needed -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-box-seam"></i> Dependencies</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="tool-packages">-</div>
+                        </div>
+                    </div>
+
+                    <!-- GitHub Metrics -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-github"></i> GitHub Metrics</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="tool-github-metrics">-</div>
+                        </div>
+                    </div>
+
+                    <!-- GitHub Release Info -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-tag"></i> Latest Release</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="tool-release-info" style="display: none;">
+                                <div class="text-muted">Loading release info...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- README Sections -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-file-text"></i> Documentation</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="tool-readme-sections" style="display: none;">
+                                <div class="text-muted">Loading documentation...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Ratings & Reviews -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-star"></i> Ratings & Reviews</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="tool-ratings">
+                                <div class="text-center">
+                                    <div class="rating-display mb-2">
+                                        <span class="rating-score display-4 fw-bold">-</span>
+                                        <div class="rating-stars text-warning">
+                                            <i class="bi bi-star"></i>
+                                            <i class="bi bi-star"></i>
+                                            <i class="bi bi-star"></i>
+                                            <i class="bi bi-star"></i>
+                                            <i class="bi bi-star"></i>
+                                        </div>
+                                        <small class="text-muted">(<span id="rating-count">0</span> reviews)</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="user-rating-form" class="mt-3">
+                                <hr>
+                                <h6 class="mb-2">Rate this tool</h6>
+                                <div class="rating-input text-warning mb-2">
+                                    <button class="btn btn-link p-1" data-rating="1"><i class="bi bi-star"></i></button>
+                                    <button class="btn btn-link p-1" data-rating="2"><i class="bi bi-star"></i></button>
+                                    <button class="btn btn-link p-1" data-rating="3"><i class="bi bi-star"></i></button>
+                                    <button class="btn btn-link p-1" data-rating="4"><i class="bi bi-star"></i></button>
+                                    <button class="btn btn-link p-1" data-rating="5"><i class="bi bi-star"></i></button>
+                                </div>
+                                <textarea id="user-review" class="form-control form-control-sm mb-2" 
+                                          placeholder="Write your review..." rows="3"></textarea>
+                                <button id="submit-review" class="btn btn-sm btn-primary w-100">
+                                    <i class="bi bi-check-circle"></i> Submit Review
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-lightning"></i> Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <a id="btn-execute" href="#" class="btn btn-primary w-100 mb-2">
+                                <i class="bi bi-play-fill"></i> Execute Tool
+                            </a>
+                            <a id="btn-compare" href="#" class="btn btn-outline-primary w-100 mb-2">
+                                <i class="bi bi-bar-chart"></i> Compare with other tools
+                            </a>
+                            <button class="btn btn-outline-secondary w-100" onclick="window.print()">
+                                <i class="bi bi-printer"></i> Print this page
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dependencies -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-box-seam"></i> Dependencies</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="tool-dependencies">
+                                <p class="text-muted">Loading dependencies...</p>
+                            </div>
+                            <a href="dependencies.html" class="btn btn-sm btn-outline-secondary mt-2">
+                                <i class="bi bi-box-seam"></i> View All Dependencies
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Tools -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-link"></i> Related Tools in Same Category</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="related-tools" class="d-flex flex-wrap gap-2">
+                                <!-- Related tools will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 mt-5 border-top">
+        <p class="text-muted mb-0">
+            <i class="bi bi-virus"></i> Virometrics - Viral Bioinformatics Tools Dashboard
+        </p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/tool-detail.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+# Virometrics Docker Ignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.env
+*.egg-info/
+
+# Database
+data/*.db
+data/*.db-journal
+data/*.db-shm
+data/*.db-wal
+
+# Logs
+logs/*.log
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+Dockerfile.worker
+docker-compose.yml
+docker-compose.override.yml
+.docker/
+
+# Build artifacts
+build/
+dist/
+*.whl
+*.tar.gz
+
+# Test
+tests/__pycache__/
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Uploads and outputs (optional - set to true if you want to exclude)
+data/uploads/*
+data/outputs/*
+!data/uploads/.gitkeep
+!data/outputs/.gitkeep
+
+# Checkpoints
+data/checkpoints/*
+!data/checkpoints/.gitkeep
+
+# Documentation
+docs/*.md
+docs/*.pdf

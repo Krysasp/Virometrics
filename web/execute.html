@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>Execute Tool - Virometrics</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        .output-container {
+            max-height: 500px;
+            overflow-y: auto;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            padding: 1rem;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .output-line {
+            margin: 0;
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .output-time {
+            color: #888;
+            margin-right: 8px;
+        }
+        .output-stdout { color: #e0e0e0; }
+        .output-stderr { color: #ff6b6b; }
+        .output-error { color: #ffa502; }
+        .output-info { color: #74b9ff; }
+        .param-form fieldset {
+            background: rgba(0,0,0,0.02);
+            border-radius: 8px;
+        }
+        [data-theme="dark"] .param-form fieldset {
+            background: rgba(255,255,255,0.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-virus"></i> <strong>Virometrics</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="comparison.html">Comparison</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="browse.html">Browse Tools</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="execute.html">Execute</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="dependencies.html">Dependencies</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="data.html">Data</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="workflow_builder.html">Workflow Builder</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="register-tool.html">Register Tool</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="execute-workflow.html">Execute Workflow</a>
+                    </li>
+                </ul>
+                <button class="btn btn-outline-light btn-sm" id="themeToggle">
+                    <i class="bi bi-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid dashboard-container">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="section-title">Tool Execution</h1>
+                <p class="lead">Run bioinformatics tools with real-time output streaming</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Left Column: Tool Selection & Parameters -->
+            <div class="col-lg-5">
+                <!-- Tool Selector -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-gear"></i> Select Tool</h5>
+                    </div>
+                    <div class="card-body">
+                        <label class="form-label">Choose a tool to execute</label>
+                        <select class="form-select" id="tool-select">
+                            <option value="">-- Select a tool --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tool Info Panel -->
+                <div class="card mb-3" id="tool-panel" style="display: none;">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Tool Info</h5>
+                    </div>
+                    <div class="card-body">
+                        <h5 id="selected-tool-name"></h5>
+                        <span class="badge bg-primary" id="selected-tool-category"></span>
+                    </div>
+                </div>
+
+                <!-- Parameter Form -->
+                <div class="card mb-3" id="param-section" style="display: none;">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-sliders"></i> Parameters</h5>
+                    </div>
+                    <div class="card-body param-form">
+                        <form id="parameter-form">
+                            <!-- Dynamic parameters inserted here -->
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Custom Command -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-terminal"></i> Command
+                            <button class="btn btn-sm btn-outline-secondary float-end" id="cmd-toggle">
+                                Custom
+                            </button>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3" id="custom-command-section" style="display: none;">
+                            <label class="form-label">Custom command</label>
+                            <input type="text" class="form-control" id="custom-command"
+                                   placeholder="e.g., echo 'hello'">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Working Directory</label>
+                            <input type="text" class="form-control" id="working-dir"
+                                   placeholder="/path/to/working/dir">
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" id="btn-execute">
+                                <i class="bi bi-play-fill"></i> Run Tool
+                            </button>
+                            <button class="btn btn-danger" id="btn-cancel" style="display: none;">
+                                <i class="bi bi-stop-fill"></i> Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Output & History -->
+            <div class="col-lg-7">
+                <!-- Execution Output -->
+                <div class="card mb-3" id="output-panel" style="display: none;">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-terminal"></i> Execution Output</h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-secondary" id="execution-status">Pending</span>
+                            <span class="text-muted small" id="return-code"></span>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="nav nav-tabs px-3 pt-2" id="outputTabs">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-bs-toggle="tab" href="#stdout-pane">
+                                    Stdout
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" href="#stderr-pane">
+                                    Stderr
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" href="#all-pane">
+                                    All Output
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="tab-content p-3">
+                            <div class="tab-pane fade show active" id="stdout-pane">
+                                <div class="output-container" id="output-content"></div>
+                            </div>
+                            <div class="tab-pane fade" id="stderr-pane">
+                                <div class="output-container" id="stderr-content"></div>
+                            </div>
+                            <div class="tab-pane fade" id="all-pane">
+                                <div class="output-container" id="all-content"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Execution History -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Executions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="execution-history">
+                            <p class="text-muted">No executions yet.</p>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="loadExecutionHistory()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 mt-5 border-top">
+        <p class="text-muted mb-0">
+            <i class="bi bi-virus"></i> Virometrics - Viral Bioinformatics Platform
+        </p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/sse-handler.js"></script>
+    <script src="js/execute.js"></script>
+</body>
+</html>

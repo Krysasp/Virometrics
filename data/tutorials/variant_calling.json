@@ -1,0 +1,90 @@
+{
+  "id": "variant_calling",
+  "title": "Variant Calling Pipeline",
+  "description": "Learn how to call variants from sequencing data",
+  "duration_minutes": 25,
+  "difficulty": "intermediate",
+  "prerequisites": ["getting_started"],
+  "steps": [
+    {
+      "index": 0,
+      "title": "Variant Calling Overview",
+      "description": "<p>Variant calling identifies differences between your sample sequences and a reference genome.</p><p>This tutorial covers the complete pipeline from raw reads to variant calls.</p>",
+      "interactive": false,
+      "tip": "Variant calling requires a reference genome and quality-controlled reads."
+    },
+    {
+      "index": 1,
+      "title": "Step 1: Quality Control",
+      "description": "<p>Before variant calling, assess the quality of your sequencing reads using FastQC or similar tools.</p><p>Check for adapter contamination, quality score distribution, and sequence duplication levels.</p>",
+      "interactive": true,
+      "demoId": "qcInput",
+      "demoLabel": "FASTQ file for QC:",
+      "demoPlaceholder": "/data/sample_R1.fastq",
+      "onExecute": "function(value) { return value ? 'Running FastQC on ' + value + '...' : 'Select a FASTQ file'; }",
+      "tip": "Look for per-base quality scores above Q30 for reliable variant calling."
+    },
+    {
+      "index": 2,
+      "title": "Step 2: Read Alignment",
+      "description": "<p>Align reads to the reference genome using BWA-MEM or Bowtie2.</p><p>The resulting BAM file contains the genomic positions of each read.</p>",
+      "interactive": true,
+      "demoId": "alignInput",
+      "demoLabel": "Reference genome:",
+      "demoPlaceholder": "/references/hg38.fa",
+      "onExecute": "function(value) { return value ? 'Aligning to ' + value + ' using BWA-MEM...' : 'Select a reference'; }",
+      "tip": "Index your reference genome before alignment for faster processing."
+    },
+    {
+      "index": 3,
+      "title": "Step 3: BAM Processing",
+      "description": "<p>Process the aligned BAM file:</p><ul><li>Sort by genomic position</li><li>Mark duplicate reads</li><li>Recalibrate base quality scores</li></ul>",
+      "interactive": false,
+      "tip": "GATK's Best Practices recommend BaseRecalibrator for improving variant calling accuracy."
+    },
+    {
+      "index": 4,
+      "title": "Step 4: Variant Calling",
+      "description": "<p>Call variants using FreeBayes, GATK HaplotypeCaller, or bcftools.</p><p>The output is a VCF file containing all identified variants.</p>",
+      "interactive": true,
+      "demoId": "vcfInput",
+      "demoLabel": "BAM file for variant calling:",
+      "demoPlaceholder": "/aligned/sample.sorted.dedup.bam",
+      "onExecute": "function(value) { return value ? 'Calling variants in ' + value + '...' : 'Select a BAM file'; }",
+      "tip": "Set appropriate quality filters: DP > 10, QUAL > 20, MQ > 40"
+    },
+    {
+      "index": 5,
+      "title": "Step 5: Variant Filtering",
+      "description": "<p>Filter variants based on quality metrics:</p><ul><li>Depth of coverage (DP)</li><li>Mapping quality (MQ)</li><li> strand bias (SB)</li><li>Genotype quality (GQ)</li></ul>",
+      "interactive": false,
+      "tip": "Hard filtering is simpler but VQSR (Variant Quality Score Recalibration) provides better results for large datasets."
+    },
+    {
+      "index": 6,
+      "title": "Step 6: Annotation",
+      "description": "<p>Annotate variants with functional information using SnpEff or VEP:</p><ul><li>Consequence (missense, synonymous, etc.)</li><li>Affected genes</li><li>Population frequencies</li><li>Clinical significance</li></ul>",
+      "interactive": true,
+      "demoId": "annotateInput",
+      "demoLabel": "VCF file to annotate:",
+      "demoPlaceholder": "/variants/raw_variants.vcf",
+      "onExecute": "function(value) { return value ? 'Annotating ' + value + ' with SnpEff...' : 'Select a VCF file'; }",
+      "tip": "Download the appropriate genome database before annotation."
+    },
+    {
+      "index": 7,
+      "title": "Results Summary",
+      "description": "<p>Your variant calling pipeline is complete! The annotated VCF contains all identified variants with functional predictions.</p><p>Review the summary statistics and export results for downstream analysis.</p>",
+      "interactive": false,
+      "tip": "Create a custom workflow combining these steps for reproducible analysis."
+    }
+  ],
+  "output_files": [
+    "/variants/called_variants.vcf",
+    "/variants/annotated_variants.vcf",
+    "/reports/qc_report.html"
+  ],
+  "tools_used": ["fastqc", "bwa", "samtools", "freebayes", "snpeff"],
+  "tags": ["variants", "snp", "pipeline", "intermediate"],
+  "next_tutorial": "custom_workflow"
+}

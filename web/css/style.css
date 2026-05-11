@@ -1,0 +1,272 @@
+/* style.css - Virometrics Dashboard Styles */
+
+:root {
+    --primary-color: #109b81;
+    --primary-light: #6FC3BA;
+    --primary-dark: #097362;
+    --secondary-color: #2C4B7C;
+    --secondary-light: #557EBF;
+    --accent-color: #9D5EB0;
+    --info-color: #3498db;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #e74c3c;
+    --light-bg: #f8f9fa;
+    --dark-bg: #1E293B;
+    --card-bg: #ffffff;
+    --card-bg-dark: #334155;
+    --text-light: #333;
+    --text-dark: #f8f9fa;
+    --border-color: rgba(0,0,0,0.1);
+    --border-color-dark: rgba(255,255,255,0.1);
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    --shadow-hover: 0 8px 15px rgba(0, 0, 0, 0.1);
+    --transition-speed: 0.3s;
+    --border-radius: 12px;
+    --section-padding: 2rem;
+    --nav-height: 4rem;
+}
+
+body {
+    min-height: 100vh;
+    background-color: var(--light-bg);
+    color: var(--text-light);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    padding-top: var(--nav-height);
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+[data-theme="dark"] {
+    background-color: var(--dark-bg);
+    color: var(--text-dark);
+}
+
+/* Navigation */
+.navbar {
+    background-color: var(--secondary-color) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    height: var(--nav-height);
+    z-index: 1030;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: white !important;
+}
+
+.navbar-brand span {
+    color: var(--primary-light);
+}
+
+.nav-link {
+    position: relative;
+    padding: 0.5rem 1rem;
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 500;
+    transition: color var(--transition-speed);
+}
+
+.nav-link:hover, .nav-link:focus {
+    color: #ffffff !important;
+}
+
+.nav-link.active {
+    color: #ffffff !important;
+}
+
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 1rem;
+    right: 1rem;
+    height: 3px;
+    background-color: var(--primary-color);
+    border-radius: 3px 3px 0 0;
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    padding: var(--section-padding);
+}
+
+/* Stat Cards */
+.stat-card {
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    border: none;
+    height: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.bg-primary-light {
+    background-color: rgba(16, 155, 129, 0.15);
+}
+
+.bg-success-light {
+    background-color: rgba(40, 167, 69, 0.15);
+}
+
+.bg-info-light {
+    background-color: rgba(52, 152, 219, 0.15);
+}
+
+.bg-warning-light {
+    background-color: rgba(255, 193, 7, 0.15);
+}
+
+/* Cards */
+.card {
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    border: none;
+    height: 100%;
+    background-color: var(--card-bg);
+    overflow: hidden;
+}
+
+[data-theme="dark"] .card {
+    background-color: var(--card-bg-dark);
+    color: var(--text-dark);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+}
+
+.card-header {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    font-weight: 600;
+    border-bottom: none;
+    padding: 1rem 1.5rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Section Title */
+.section-title {
+    font-weight: 700;
+    color: var(--secondary-color);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-light);
+    display: inline-block;
+}
+
+[data-theme="dark"] .section-title {
+    color: var(--primary-light);
+}
+
+/* DataTables Customization */
+.dataTables_wrapper {
+    padding: 0;
+}
+
+.dataTables_length select,
+.dataTables_filter input {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.375rem 0.75rem;
+    background-color: var(--card-bg);
+    color: var(--text-light);
+}
+
+[data-theme="dark"] .dataTables_length select,
+[data-theme="dark"] .dataTables_filter input {
+    background-color: var(--card-bg-dark);
+    color: var(--text-dark);
+    border-color: var(--border-color-dark);
+}
+
+.dataTables_info,
+.dataTables_length,
+.dataTables_filter {
+    color: inherit !important;
+    margin-bottom: 1rem;
+}
+
+.page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.page-link {
+    color: var(--primary-color);
+}
+
+[data-theme="dark"] .page-link {
+    background-color: var(--card-bg-dark);
+    color: var(--text-dark);
+    border-color: var(--border-color-dark);
+}
+
+/* Badges */
+.badge {
+    padding: 0.4em 0.6em;
+    font-weight: 500;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Tooltip */
+.tooltip-inner {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+/* Footer */
+footer {
+    color: var(--text-light);
+    opacity: 0.7;
+    transition: color var(--transition-speed);
+}
+
+[data-theme="dark"] footer {
+    color: var(--text-dark);
+}
+
+footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* Dark mode overrides for Plotly */
+[data-theme="dark"] .js-plotly-plot .plotly .main-svg {
+    background: transparent !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 1rem;
+    }
+
+    .stat-card h3 {
+        font-size: 1.5rem;
+    }
+}

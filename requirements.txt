@@ -1,0 +1,25 @@
+# Virometrics - Data Enhancement Pipeline Dependencies
+
+# Core
+pandas>=2.0.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# Database
+sqlalchemy>=2.0.0
+
+# API & Data
+python-dotenv>=1.0.0
+PyGithub>=2.1.0  # For GitHub API access
+
+# Utilities
+tqdm>=4.65.0
+jinja2>=3.1.0  # For HTML templating if needed
+
+# Optional: For testing
+pytest>=7.4.0
+
+# Flask backend
+flask>=3.0.0
+flask-cors>=4.0.0

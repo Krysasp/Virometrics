@@ -1,0 +1,100 @@
+{
+  "id": "custom_workflow",
+  "title": "Building Custom Workflows",
+  "description": "Create your own analysis workflows by combining tools",
+  "duration_minutes": 30,
+  "difficulty": "advanced",
+  "prerequisites": ["getting_started", "variant_calling"],
+  "steps": [
+    {
+      "index": 0,
+      "title": "Workflow Overview",
+      "description": "<p>Workflows allow you to chain multiple tools together for automated analysis pipelines.</p><p>Define inputs, specify tool sequence, and configure parameters all in one place.</p>",
+      "interactive": false,
+      "tip": "Workflows ensure reproducibility by capturing the complete analysis configuration."
+    },
+    {
+      "index": 1,
+      "title": "Step 1: Define Workflow Inputs",
+      "description": "<p>Specify the input data types your workflow will accept:</p><ul><li>FASTQ files for raw sequence data</li><li>Reference genome for alignment</li><li>Parameter values for tool configuration</li></ul>",
+      "interactive": true,
+      "demoId": "workflowName",
+      "demoLabel": "Workflow name:",
+      "demoPlaceholder": "My Custom Analysis",
+      "onExecute": "function(value) { return value ? 'Creating workflow: ' + value : 'Enter a workflow name'; }",
+      "tip": "Use descriptive names that indicate the workflow purpose and data type."
+    },
+    {
+      "index": 2,
+      "title": "Step 2: Add Tools to Workflow",
+      "description": "<p>Build your workflow by adding tools in execution order:</p><ol><li>Drag tools from the toolbox</li><li>Connect them with data flow arrows</li><li>Configure each tool's parameters</li></ol>",
+      "interactive": true,
+      "demoId": "addTool",
+      "demoLabel": "Add tool:",
+      "demoPlaceholder": "fastqc",
+      "onExecute": "function(value) { return value ? 'Added ' + value + ' to workflow' : 'Select a tool'; }",
+      "tip": "Tools must be compatible - output format of one tool must match input format of the next."
+    },
+    {
+      "index": 3,
+      "title": "Step 3: Configure Tool Parameters",
+      "description": "<p>Set parameters for each tool in the workflow:</p><ul><li>Quality thresholds</li><li>Reference paths</li><li>Output directories</li><li>Resource limits (threads, memory)</li></ul>",
+      "interactive": false,
+      "tip": "Use environment variables for paths that might change between runs."
+    },
+    {
+      "index": 4,
+      "title": "Step 4: Define Conditional Logic",
+      "description": "<p>Advanced workflows can include conditional branches:</p><ul><li>Run different tools based on data characteristics</li><li>Split parallel processing for multiple samples</li><li>Merge results from parallel branches</li></ul>",
+      "interactive": true,
+      "demoId": "condition",
+      "demoLabel": "Set condition (optional):",
+      "demoPlaceholder": "if quality_score > 30",
+      "onExecute": "function(value) { return value ? 'Condition set: ' + value : 'Condition optional'; }",
+      "tip": "Keep conditions simple to maintain workflow readability."
+    },
+    {
+      "index": 5,
+      "title": "Step 5: Define Outputs",
+      "description": "<p>Specify which intermediate and final results to save:</p><ul><li>Final analysis results</li><li>Intermediate files for debugging</li><li>Summary statistics</li><li>Quality control reports</li></ul>",
+      "interactive": false,
+      "tip": "Use meaningful output names that describe the content."
+    },
+    {
+      "index": 6,
+      "title": "Step 6: Save and Validate",
+      "description": "<p>Save your workflow definition and validate it:</p><ul><li>Check for missing dependencies</li><li>Verify parameter compatibility</li><li>Test with sample data</li></ul>",
+      "interactive": true,
+      "demoId": "saveWorkflow",
+      "demoLabel": "Save workflow:",
+      "onExecute": "function() { return 'Workflow saved! Ready to execute with your data.'; }",
+      "tip": "Version control your workflows for tracking changes over time."
+    },
+    {
+      "index": 7,
+      "title": "Step 7: Execute Workflow",
+      "description": "<p>Run your workflow with input data. Monitor execution through the workflow dashboard.</p><p>Access results in the Data browser once complete.</p>",
+      "interactive": true,
+      "demoId": "runWorkflow",
+      "demoLabel": "Execute workflow:",
+      "demoPlaceholder": "Run with test data",
+      "onExecute": "function() { return 'Workflow execution started. Check status in Workflow Executions.'; }",
+      "tip": "Large workflows benefit from parallel execution of independent steps."
+    },
+    {
+      "index": 8,
+      "title": "Workflow Best Practices",
+      "description": "<p>Following these practices will help you build robust, reusable workflows:</p><ul><li>Use meaningful names for workflow and outputs</li><li>Document parameter choices</li><li>Include quality control steps</li><li>Test incrementally as you build</li><li>Share workflows with collaborators</li></ul>",
+      "interactive": false,
+      "tip": "Export your workflow as JSON to share with team members or version control."
+    }
+  ],
+  "output_files": [
+    "/workflows/custom_workflow.json",
+    "/workflows/custom_workflow.yaml",
+    "/reports/workflow_validation.json"
+  ],
+  "tools_used": ["workflow_engine", "tool_registry", "plugin_manager"],
+  "tags": ["workflow", "automation", "advanced", "customization"],
+  "related_tutorials": ["variant_calling", "getting_started"]
+}
