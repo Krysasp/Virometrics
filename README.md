@@ -5,6 +5,7 @@ An interactive dashboard designed to help users discover, evaluate, and compare 
 Dashboard has been deployed and tested in ihcm-ngs lab at UNIMAS, Sarawak. Several releases are to be expected to improve integration, information retrieval and workflow management and execution.
 
 ## Features
+<img width="1835" height="927" alt="Screenshot from 2026-05-13 17-36-15" src="https://github.com/user-attachments/assets/51833813-a785-4919-a014-da1ae9ae16f6" />
 
 ### Interactive Dashboard
 - **Tool Browser**: Filter and search through 247+ viral bioinformatics tools
