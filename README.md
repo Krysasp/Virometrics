@@ -586,17 +586,6 @@ curl -X DELETE http://localhost:8000/api/jobs/<job_id>
 curl -X POST http://localhost:8000/api/jobs/<job_id>/retry
 ```
 
-## Future Enhancements
-
-- [ ] Add more bio.tools API integration for complete metadata
-- [ ] Implement tool recommendation engine
-- [ ] Add research workflow suggestions
-- [ ] Create tool relationship network visualization
-- [ ] Add user ratings and reviews
-- [ ] Implement advanced search with regex support
-- [ ] Support for custom tool registration
-- [ ] Multi-user support with authentication
-
 ## License
 
 This project uses data from github.
